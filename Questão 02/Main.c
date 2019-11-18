@@ -1,6 +1,7 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
 
 struct grafos{
     int nVertices, ehPonderado, *grau;
@@ -31,7 +32,6 @@ struct maior{
     struct pilha *caminho1, *caminho2;
 };
 
-
 typedef struct pilha Pilha;
 typedef struct maior Maior;
 typedef struct torre Torre;
@@ -58,49 +58,131 @@ int VerificaSeTaNaFila(Fila *F, int raiz);
 void exibeFila(Fila *F);
 int converteEstado(Torre *hanoi, int *estado);
 
-int main(){
-    int i, j, k, l;
-    Torre *hanoi=(Torre*)malloc(sizeof(Torre));
-    hanoi->gr=NULL;
-    //3^n => 3 ^ 4 == 81
-    //Grafos *gr;
-    hanoi->gr = criaGrafo(81, 1);
-    Maior *cam=(Maior*)malloc(sizeof(Maior));
-    cam->tam1=0;
-    cam->caminho1=NULL;
-    cam->tam2=INFINITY;
-    cam->caminho2=NULL;
-    int contPos = 0, vis[81], estado[4];
-    int pos=0;
-    hanoi->estado=(int**)malloc(sizeof(int*)*81);
-    for(i=0;i<81;i++){
-        hanoi->estado[i]=(int*)malloc(sizeof(int)*4);
+
+Grafos* criaGrafo(int vertice, int ehPonderado);
+void insereAresta(Grafos **gr, int origem, int destino, int peso, int ehDigrafo);
+void BellmanFord(Torre *hanoi, int **pesos, int ini);
+
+int main (void){
+  int i, j, k, l;
+  Torre *hanoi=(Torre*)malloc(sizeof(Torre));
+  hanoi->gr=NULL;
+  hanoi->gr = criaGrafo(81, 1);
+  Maior *cam=(Maior*)malloc(sizeof(Maior));
+  cam->tam1=0;
+  cam->caminho1=NULL;
+  cam->tam2=INFINITY;
+  cam->caminho2=NULL;
+  int contPos = 0, vis[81], estado[4];
+  int pos=0;
+  hanoi->estado=(int**)malloc(sizeof(int*)*81);
+  for(i=0;i<81;i++){
+      hanoi->estado[i]=(int*)malloc(sizeof(int)*4);
+  }
+  for(i=0; i<3; i++){
+      for(j=0; j<3; j++){
+          for(k=0; k<3; k++){
+              for(l=0; l<3; l++){
+                  hanoi->estado[contPos][0] = i+1;
+                  hanoi->estado[contPos][1] = j+1;
+                  hanoi->estado[contPos][2] = k+1;
+                  hanoi->estado[contPos][3] = l+1;
+                  contPos++;
+              }
+          }
+      }
+  }
+  contPos = 0;
+  conectar(hanoi);
+  printf("Digite o estado inicial da torre[NUMERO SEPARADOS POR ESPACO]:\n");
+  scanf("%d%d%d%d", &estado[0], &estado[1], &estado[2], &estado[3]);
+  BellmanFord(hanoi, hanoi->gr->pesos, converteEstado(hanoi, estado));
+  return 0;
+}
+
+Grafos* criaGrafo(int vertice, int ehPonderado){
+  Grafos *gr;
+  int i;
+  gr = (Grafos*)malloc(sizeof(Grafos));
+  if(gr != NULL){
+      gr->nVertices = vertice;
+      gr->ehPonderado = (ehPonderado != 0)? 1:0;
+      gr->grau = (int*) calloc(sizeof(int), vertice);
+      gr->arestas = (int**) malloc(vertice * sizeof(int*));
+      for(i=0; i<vertice; i++){
+          gr->arestas[i] = (int*) calloc(vertice, sizeof(int));
+      }
+      if(gr->ehPonderado){
+          gr->pesos = (int**) malloc(vertice * sizeof(int*));
+          for(i=0; i<vertice; i++){
+              gr->pesos[i] = (int*) calloc(vertice, sizeof(int));
+          }
+      }
+  }
+  return gr;
+}
+
+void insereAresta(Grafos **gr, int origem, int destino, int peso, int ehDigrafo){
+  if(*gr != NULL){
+    if(origem >= 0 && origem <= (*gr)->nVertices){
+      if(destino > 0 && destino <= (*gr)->nVertices){
+        (*gr)->arestas[origem][(*gr)->grau[origem]] = destino;
+      }
+      if((*gr)->ehPonderado){
+        (*gr)->pesos[origem][(*gr)->grau[origem]] = peso;
+      }
+      (*gr)->grau[origem]++;
+      if(!ehDigrafo){
+        insereAresta(gr, destino, origem, peso, 1);
+      }
     }
-    for(i=0; i<3; i++){
-        for(j=0; j<3; j++){
-            for(k=0; k<3; k++){
-                for(l=0; l<3; l++){
-                    hanoi->estado[contPos][0] = i+1;
-                    hanoi->estado[contPos][1] = j+1;
-                    hanoi->estado[contPos][2] = k+1;
-                    hanoi->estado[contPos][3] = l+1;
-                    contPos++;
-                }
-            }
+  }
+}
+
+void BellmanFord(Torre *hanoi, int **pesos, int ini){
+  Grafos *gr = hanoi->gr;
+  int n1, n2, n3;
+  float vetorCusto[gr->nVertices], vetorAnterior[gr->nVertices];
+  for (n1 = 0; n1 < gr->nVertices; n1++){
+    vetorCusto[n1] = INFINITY;
+  }
+
+  vetorCusto[ini] = 0;
+  vetorAnterior[ini] = ini;
+
+  for (n1 = 0; n1 < gr->nVertices - 1; n1++){       //Pecorre todos as ITERAÇÕES possiveis até está tudo correto.
+    for (n2 = 0; n2 < gr->nVertices; n2++){         //Pecorre todos os VERTICES.
+      if (vetorCusto[n2] != INFINITY){
+        for (n3 = 0; n3 < gr->grau[n2]; n3++){        //Pecorre todas as ARESTAS dos VERTICES.
+          if (vetorCusto[gr->arestas[n2][n3]] > vetorCusto[n2] + pesos[n2][n3]){
+            vetorCusto[gr->arestas[n2][n3]] = vetorCusto[n2] + pesos[n2][n3];
+            vetorAnterior[gr->arestas[n2][n3]] = n2;
+          }
         }
+      }
     }
-    contPos = 0;
-    conectar(hanoi);
-    buscaEmLargura(hanoi->gr,0);
-    //mostraEstados(hanoi);
-    printf("Digite o estado inicial da torre[numeros separados por espaco]:\n");
-    scanf("%d%d%d%d", &estado[0], &estado[1], &estado[2], &estado[3]);
-    buscaProf(hanoi->gr, converteEstado(hanoi, estado), vis, cam);
-    printf("O maior caminho possivel eh:\n");
-    mostraCam(cam->caminho1, hanoi);
-    printf("O menor caminho possivel eh:\n");
-    mostraCam(cam->caminho2, hanoi);
-    return 0;
+  }
+
+  // printf("Saindo de %d\n", ini);
+  //
+  // for (n1 = 0; n1 < gr->nVertices; n1++){
+  //   printf ("Vertice %d: %d%d%d%d -> vetorCusto: %.0f\t\t--\t\tvetorAnterior: %.0f\n", n1,
+  //   hanoi->estado[n1][0], hanoi->estado[n1][1], hanoi->estado[n1][2], hanoi->estado[n1][3], vetorCusto[n1], vetorAnterior[n1]);
+  // }
+  int x = 80, i;
+  n2 = x;
+  n1 = (int)vetorCusto[x];
+  int Aux[n1 + 1];
+  for (i = 0; i < n1; i++){
+    x = vetorAnterior[x];
+    Aux[i] = x;
+  }
+  printf("Melhor Caminho:\n");
+  for (int i = n1 - 1; i >= 0; i--){
+    printf(">>> %d%d%d%d\n", hanoi->estado[Aux[i]][0], hanoi->estado[Aux[i]][1], hanoi->estado[Aux[i]][2], hanoi->estado[Aux[i]][3]);
+  }
+  printf(">>> %d%d%d%d\n", hanoi->estado[80][0], hanoi->estado[80][1], hanoi->estado[80][2], hanoi->estado[80][3]);
+
 }
 
 int converteEstado(Torre *hanoi, int *estado){
@@ -118,45 +200,6 @@ void mostraCam(Pilha *caminho, Torre *hanoi){
     }else{
         mostraCam(caminho->prox, hanoi);
         printf("%d: %d,%d,%d,%d\n",caminho->n, hanoi->estado[caminho->n][0], hanoi->estado[caminho->n][1], hanoi->estado[caminho->n][2], hanoi->estado[caminho->n][3]);
-    }
-}
-
-Grafos* criaGrafo(int vertice, int ehPonderado){
-    Grafos *gr;
-    int i;
-    gr = (Grafos*)malloc(sizeof(Grafos));
-    if(gr != NULL){
-        gr->nVertices = vertice;
-        gr->ehPonderado = (ehPonderado != 0)? 1:0;
-        gr->grau = (int*) calloc(sizeof(int), vertice);
-        gr->arestas = (int**) malloc(vertice * sizeof(int*));
-        for(i=0; i<vertice; i++){
-            gr->arestas[i] = (int*) calloc(vertice, sizeof(int));
-        }
-        if(gr->ehPonderado){
-            gr->pesos = (int**) malloc(vertice * sizeof(int*));
-            for(i=0; i<vertice; i++){
-                gr->pesos[i] = (int*) calloc(vertice, sizeof(int));
-            }
-        }
-    }
-    return gr;
-}
-
-void insereAresta(Grafos **gr, int origem, int destino, int peso, int ehDigrafo){
-    if(*gr != NULL){
-        if(origem >= 0 && origem <= (*gr)->nVertices){
-            if(destino > 0 && destino <= (*gr)->nVertices){
-                (*gr)->arestas[origem][(*gr)->grau[origem]] = destino;
-            }
-            if((*gr)->ehPonderado){
-                (*gr)->pesos[origem][(*gr)->grau[origem]] = peso;
-            }
-            (*gr)->grau[origem]++;
-            if(!ehDigrafo){
-                insereAresta(gr, destino, origem, peso, 1);
-            }
-        }
     }
 }
 
@@ -395,3 +438,27 @@ int VerificaSeTaNaFila(Fila *F, int raiz){
     }
     return retorno;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
