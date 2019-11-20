@@ -57,10 +57,6 @@ Fila *RemoveVerticeNaFila(Fila *F);
 int VerificaSeTaNaFila(Fila *F, int raiz);
 void exibeFila(Fila *F);
 int converteEstado(Torre *hanoi, int *estado);
-
-
-Grafos* criaGrafo(int vertice, int ehPonderado);
-void insereAresta(Grafos **gr, int origem, int destino, int peso, int ehDigrafo);
 void BellmanFord(Torre *hanoi, int **pesos, int ini);
 
 int main (void){
