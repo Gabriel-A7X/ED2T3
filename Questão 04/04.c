@@ -11,10 +11,11 @@ typedef struct grafos Grafos;
 
 Grafos* criaGrafo(int vertice, int ehPonderado);
 void insereAresta(Grafos **gr, int origem, int destino, float peso, int ehDigrafo);
-void BellmanFord(Grafos *gr, float **pesos, int ini);
-void adj(Grafos *gr);
+void BellmanFord(Grafos *gr, float **pesos, int ini, int final);
+void adj(Grafos * gr);
 
-int main(){
+  int main(){
+    int ini, final;
     Grafos *gr;
     gr = criaGrafo(8, 1);
     insereAresta(&gr, 0, 1, 0.0, 1);
@@ -31,8 +32,13 @@ int main(){
     insereAresta(&gr, 4, 7, 0.4, 1);
     insereAresta(&gr, 6, 4, 0.7, 1);
     insereAresta(&gr, 7, 6, 0.6, 1);
-    //adj(gr);
-    BellmanFord(gr, gr->pesos, 0);
+
+    printf("Informe o INICIO: ");
+    scanf("%d", &ini);
+    printf("Informe o FIM: ");
+    scanf("%d", &final);
+
+    BellmanFord(gr, gr->pesos, ini, final);
     return 0;
 }
 
@@ -84,34 +90,65 @@ void insereAresta(Grafos **gr, int origem, int destino, float peso, int ehDigraf
   }
 }
 
-void BellmanFord(Grafos *gr, float **pesos, int ini){
+void BellmanFord(Grafos *gr, float **pesos, int ini, int final){
   int n1, n2, n3;
   float vetorCusto[gr->nVertices], vetorAnterior[gr->nVertices];
   for (n1 = 0; n1 < gr->nVertices; n1++){
     vetorCusto[n1] = -INFINITY;
   }
 
-  vetorCusto[ini] = 0;
+  vetorCusto[ini] = 1;
   vetorAnterior[ini] = ini;
+  int Key = 0;
 
   for (n1 = 0; n1 < gr->nVertices - 1; n1++){       //Pecorre todos as ITERAÇÕES possiveis até está tudo correto.
     for (n2 = 0; n2 < gr->nVertices; n2++){         //Pecorre todos os VERTICES.
       if (vetorCusto[n2] != -INFINITY){
         for (n3 = 0; n3 < gr->grau[n2]; n3++){        //Pecorre todas as ARESTAS dos VERTICES.
-          if (vetorCusto[gr->arestas[n2][n3]] < pesos[n2][n3]){
-            vetorCusto[gr->arestas[n2][n3]] = pesos[n2][n3];
-            vetorAnterior[gr->arestas[n2][n3]] = n2;
+          if (pesos[n2][n3] != 0 || Key == 0){
+            Key = 1;
+            if (vetorCusto[gr->arestas[n2][n3]] < vetorCusto[n2] * pesos[n2][n3])
+            {
+              vetorCusto[gr->arestas[n2][n3]] = vetorCusto[n2] * pesos[n2][n3];
+              vetorAnterior[gr->arestas[n2][n3]] = n2;
+            }
           }
         }
       }
     }
-    
   } 
-  printf("Saindo de %d\n", ini);
+
+  // Laço criado para informar que certo vertice não tem aresta que aponta para ele.
   for (n1 = 0; n1 < gr->nVertices; n1++){
-    printf ("Vertice %d -> vetorCusto: %f\t\t--\t\tvetorAnterior: %f\n", n1, vetorCusto[n1], vetorAnterior[n1]);
+    if (vetorCusto[n1] == -INFINITY){
+      vetorCusto[n1] = -1;
+      vetorAnterior[n1] = -1;
+    }
   }
 
+  // for (n1 = 0; n1 < gr->nVertices; n1++){
+  //   printf ("Vertice %d -> vetorCusto: %f\t\t--\t\tvetorAnterior: %f\n", n1, vetorCusto[n1], vetorAnterior[n1]);
+  // }
 
+  printf("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n");
+
+  if (vetorCusto[final] == -1){
+    printf("Nao foi possivel chegar nesse vertice!\n");
+  }else{
+    printf("Saindo de %d\n", ini);
+    int n1 = final, n2 = 0, Aux[gr->nVertices];    
+    while(n1 != ini){
+      Aux[n2] = n1;
+      n1 = vetorAnterior[n1];
+      n2++;
+    }
+    for(n1 = n2 - 1; n1 >= 0; n1--){
+      if (Aux[n1] != final){
+      printf("Passando pelo vertice: %d\n", Aux[n1]);
+      }
+    }
+    printf("Chegando em %d\n", final);
+  }
+  printf("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n");
 
 }
