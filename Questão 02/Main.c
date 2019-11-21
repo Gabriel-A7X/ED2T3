@@ -137,6 +137,7 @@ void insereAresta(Grafos **gr, int origem, int destino, int peso, int ehDigrafo)
 
 void BellmanFord(Torre *hanoi, int **pesos, int ini){
   Grafos *gr = hanoi->gr;
+  int Alterou = 1;
   int n1, n2, n3;
   float vetorCusto[gr->nVertices], vetorAnterior[gr->nVertices];
   for (n1 = 0; n1 < gr->nVertices; n1++){
@@ -146,13 +147,15 @@ void BellmanFord(Torre *hanoi, int **pesos, int ini){
   vetorCusto[ini] = 0;
   vetorAnterior[ini] = ini;
 
-  for (n1 = 0; n1 < gr->nVertices - 1; n1++){       //Pecorre todos as ITERAÇÕES possiveis até está tudo correto.
-    for (n2 = 0; n2 < gr->nVertices; n2++){         //Pecorre todos os VERTICES.
+  for (n1 = 0; n1 < gr->nVertices - 1 && Alterou; n1++){       //Pecorre todos as ITERAÇÕES possiveis até está tudo correto.
+    Alterou = 0;
+    for (n2 = 0; n2 < gr->nVertices; n2++){                    //Pecorre todos os VERTICES.
       if (vetorCusto[n2] != INFINITY){
-        for (n3 = 0; n3 < gr->grau[n2]; n3++){        //Pecorre todas as ARESTAS dos VERTICES.
+        for (n3 = 0; n3 < gr->grau[n2]; n3++){                  //Pecorre todas as ARESTAS dos VERTICES.
           if (vetorCusto[gr->arestas[n2][n3]] > vetorCusto[n2] + pesos[n2][n3]){
             vetorCusto[gr->arestas[n2][n3]] = vetorCusto[n2] + pesos[n2][n3];
             vetorAnterior[gr->arestas[n2][n3]] = n2;
+            Alterou = 1;
           }
         }
       }
