@@ -13,7 +13,7 @@ typedef struct Funcionarios Funcionarios;
 struct Hash
 {
     int qtd, TamanhoHash;
-    Funcionarios **itens;       //Onde cada local da tabela tera uma certa estrutura, no caso 'Funcionario'.
+    Funcionarios **itens; //Onde cada local da tabela tera uma certa estrutura, no caso 'Funcionario'.
 };
 
 typedef struct Hash Hash;
@@ -24,14 +24,14 @@ int funcaoHash(char *chave, int TamanhoHash);
 Funcionarios inserirFuncionarios();
 int insereHash_comColisao(Hash *Ha, Funcionarios funcio);
 int funcaoHash(char *chave, int TamanhoHash);
-int funcaoColisao(char *chave, int pos);
+int funcaoColisao(int pos);
 int buscaHash(Hash *Ha, char *mat);
 void imprimeFuncionario(Funcionarios *func);
 
 int main(void)
 {
     Hash *Hs;
-    Hs = criaHash(101);
+    Hs = criaHash(150);
     int Menu, loopWhile = 1, n1;
     char Matricula[15];
     while (loopWhile)
@@ -60,12 +60,11 @@ int main(void)
             break;
         case 3:
             loopWhile = 0;
-            break;    
+            break;
         default:
             printf("Error: Informacao errada!\n");
             break;
         }
-        
     }
 
     liberaHash(Hs);
@@ -89,10 +88,11 @@ Funcionarios inserirFuncionarios()
     return novo;
 }
 
-void imprimeFuncionario(Funcionarios *func){
+void imprimeFuncionario(Funcionarios *func)
+{
     printf("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n");
     printf("Matricula:\t\t--\t%s\nNome:\t\t\t--\t%s\nFuncao:\t\t\t--\t%s\nSalario:\t\t--\t%.2f\n",
-        func->Matricula, func->Nome, func->Funcao, func->Salario);
+           func->Matricula, func->Nome, func->Funcao, func->Salario);
     printf("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n");
 }
 
@@ -100,15 +100,15 @@ int insereHash_comColisao(Hash *Ha, Funcionarios funcio)
 {
     if (Ha == NULL || Ha->qtd == Ha->TamanhoHash)
     {
-        printf("Tabela lotada!\n");
+        printf("Erro na Tabela!\n");
         return 0;
     }
     if (strlen(funcio.Matricula) == 6){
-
         char chave[10];
         strcpy(chave, funcio.Matricula);
         //Chamando a função para informar a posicao que será guardada a informação na tabela.
         int pos = funcaoHash(chave, Ha->TamanhoHash);
+        printf("Posicao: %d\n", pos);
         Funcionarios *novo;
         novo = (Funcionarios *)malloc(sizeof(Funcionarios));
         if (novo == NULL)
@@ -118,22 +118,28 @@ int insereHash_comColisao(Hash *Ha, Funcionarios funcio)
         }
         *novo = funcio;
         //Se nao houver nada na posição informada é so guardar.
-        if (Ha->itens[pos] == NULL){
+        if (Ha->itens[pos] == NULL)
+        {
             Ha->itens[pos] = novo;
             Ha->qtd++;
-        }else{
-        //Se houver algum dado será procurado uma nova posição, quando achar o loop será interrompido.
+        }
+        else
+        {
+            //Se houver algum dado será procurado uma nova posição, quando achar o loop será interrompido.
             int i, newPos = pos, Key = 1;
-            for (i = 0; i < Ha->TamanhoHash && Key; i++){
-                newPos = funcaoColisao(chave, newPos);
-                if (Ha->itens[newPos] == NULL){
+            for (i = 0; i < Ha->TamanhoHash && Key; i++)
+            {
+                newPos = funcaoColisao(newPos);
+                if (Ha->itens[newPos] == NULL)
+                {
                     Ha->itens[newPos] = novo;
                     Ha->qtd++;
                     Key = 0;
                 }
             }
             //Se houve o caso de nao encontrar nenhuma posição livre, o dado será guardado na primeira posição que foi encontrado.
-            if (Key == 1){
+            if (Key == 1)
+            {
                 Ha->itens[pos] = novo;
             }
         }
@@ -185,32 +191,35 @@ void liberaHash(Hash *hs)
 
 int funcaoHash(char *chave, int TamanhoHash)
 {
-    int valor = 0;
-    char Aux[7];
-    //Rotação do dois digitos da direita para a esquerda.
-    Aux[0] = chave[4];
-    Aux[1] = chave[5];
-    Aux[2] = chave[0];
-    Aux[3] = chave[1];
-    Aux[4] = chave[2];
-    Aux[5] = chave[3];
-    Aux[6] = '\0';
-    strcpy(chave, Aux);
-    //Pegando os valores das posições 2/4/6 da nova chave.
-    Aux[0] = chave[1];
-    Aux[1] = chave[3];
-    Aux[2] = chave[5];
-    Aux[3] = '\0';
-    //Transformando em inteiro e dividindo pelo tamanho da tabela e retornando o resto.
-    valor = atoi(Aux);
-    return ((int) valor % TamanhoHash);
+    //Traduções:
+    //----------
+    //atoi: String para Inteiro.
+    //itoa: Inteiro para String.
+
+    int valor1, valor2;
+    char Aux1[10], Aux2[10], *ptr;
+    //Pegando os valores das posições 0/2/4 da chave e transformando em inteiro.
+    Aux1[0] = chave[0];
+    Aux1[1] = chave[2];
+    Aux1[2] = chave[4];
+    Aux1[3] = '\0';
+    valor1 = atoi(Aux1);
+    //Pegando os valores das posições 1/3/5 da chave e transformando em inteiro.
+    Aux1[0] = chave[1];
+    Aux1[1] = chave[3];
+    Aux1[2] = chave[5];
+    Aux1[3] = '\0';
+    valor2 = atoi(Aux1);
+    valor1 += valor2;
+    valor1 %= 1000;         //Pegar apenas os 3 ultimos digitos.
+    //Retornando o resto da divisão da soma dos valores 1 e 2 pelo tamanho da tabela.
+    return ((int)valor1 % TamanhoHash);
 }
 
-int funcaoColisao(char *chave, int pos)
+int funcaoColisao(int pos)
 {
-    //Quando der colisão essa função irá somar o resto da divisão com o primeiro dígito da matrícula.
-    int Aux = (int)chave[0] - 48;
-    return pos + Aux;
+    //Quando der colisão essa função irá somar 7 a posição.
+    return pos + 7;
 }
 
 int buscaHash(Hash *Ha, char *mat)
@@ -225,11 +234,13 @@ int buscaHash(Hash *Ha, char *mat)
     pos = funcaoHash(mat, Ha->TamanhoHash);
     if (Ha->itens[pos] == NULL)
     {
-    //Se a posição inicial já for NULL então já pode-se afirmar que a matricula não está inserido ainda
+        //Se a posição inicial já for NULL então já pode-se afirmar que a matricula não está inserido ainda
         printf("Error: Nao foi possivel achar esse funcionario!\n");
         return 0;
-    }else{
-    //Se houver as condições irão procurar o funcionario na tabela.
+    }
+    else
+    {
+        //Se houver as condições irão procurar o funcionario na tabela.
         if (strcmp(Ha->itens[pos]->Matricula, Matricula) == 0)
         {
             //Se nao tiver ocorrido nenhuma colisão a matricula inicial estara na primeira posição.
@@ -242,7 +253,7 @@ int buscaHash(Hash *Ha, char *mat)
             int newPos = pos, i, Key = 1;
             for (i = 0; i < Ha->TamanhoHash && Key; i++)
             {
-                newPos = funcaoColisao(mat, newPos);
+                newPos = funcaoColisao(newPos);
                 if (Ha->itens[newPos] != NULL && strcmp(Ha->itens[newPos]->Matricula, Matricula) == 0)
                 {
                     //Achou o valor da matricula.
