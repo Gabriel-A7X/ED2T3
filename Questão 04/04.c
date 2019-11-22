@@ -100,7 +100,6 @@ void BellmanFord(Grafos *gr, float **pesos, int ini, int final){
 
   vetorCusto[ini] = 1;
   vetorAnterior[ini] = ini;
-  // int Key = 0;
 
   for (n1 = 0; n1 < gr->nVertices - 1 && Alterou; n1++){        //Pecorre todos as ITERAÇÕES possiveis até está tudo correto.
     Alterou = 0;
@@ -127,10 +126,6 @@ void BellmanFord(Grafos *gr, float **pesos, int ini, int final){
     }
   }
 
-  // for (n1 = 0; n1 < gr->nVertices; n1++){
-  //   printf ("Vertice %d -> vetorCusto: %f\t\t--\t\tvetorAnterior: %f\n", n1, vetorCusto[n1], vetorAnterior[n1]);
-  // }
-
   printf("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n");
 
   if (vetorCusto[final] == -1){
@@ -148,7 +143,7 @@ void BellmanFord(Grafos *gr, float **pesos, int ini, int final){
       printf("Passando pelo vertice: %d\n", Aux[n1]);
       }
     }
-    printf("Chegando em %d\n", final);
+    printf("Chegando em %d com a confiabilidade de %.2f%%\n", final, vetorCusto[final] * 100.00);
   }
   printf("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n");
 
