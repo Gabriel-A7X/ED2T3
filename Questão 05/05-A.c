@@ -1,6 +1,8 @@
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 struct Funcionarios
 {
@@ -22,35 +24,37 @@ Hash *criaHash(int TamanhoHash);
 void liberaHash(Hash *hs);
 int funcaoHash(char *chave, int TamanhoHash);
 Funcionarios inserirFuncionarios();
-int insereHash_comColisao(Hash *Ha, Funcionarios funcio);
+int insereHash_comColisao(Hash *Ha, Funcionarios funcio, int *count);
 int funcaoHash(char *chave, int TamanhoHash);
 int funcaoColisao(char *chave, int pos);
 int buscaHash(Hash *Ha, char *mat);
 void imprimeFuncionario(Funcionarios *func);
+long getMicrotime();
 
 int main(void)
 {
+    int TamanhoHash = 101;
+    srand(time(NULL));
     Hash *Hs;
-    Hs = criaHash(101);
-    int Menu, loopWhile = 1, n1;
+    Hs = criaHash(TamanhoHash);
+    int Menu, loopWhile = 1, n1, Tempo1, Tempo2, tempoGeral = 0, count = 0, x, flag = 0;
     char Matricula[15];
     while (loopWhile)
     {
         printf("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n");
-        printf("1 - Inserir um novo funcionario.\n2 - Buscar Funcionario.\n3 - Sair.\n>>> ");
+        printf("1 - Inserir mil funcionarios.\n2 - Buscar Funcionario.\n3 - Sair.\n>>> ");
         scanf("%d", &Menu);
         printf("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n");
         switch (Menu)
         {
         case 1:
-            if (insereHash_comColisao(Hs, inserirFuncionarios()))
-            {
-                printf("Funcionario Inserido com Sucesso!\n");
+            for (x = 0; x < 1000; x++){
+                Tempo1 = getMicrotime();
+                n1 = insereHash_comColisao(Hs, inserirFuncionarios(), &count);
+                Tempo2 = getMicrotime();
+                tempoGeral += Tempo2 - Tempo1;
             }
-            else
-            {
-                printf("Error: Funcionario nao inserido na Tabela!\n");
-            }
+            printf("Tempo de Insercao: %d ms\t\t--\t\tTotal de Colisoes: %d\n", tempoGeral, count);
             break;
         case 2:
             printf("Informe a matricula: ");
@@ -72,20 +76,22 @@ int main(void)
     return 0;
 }
 
+long getMicrotime()
+{
+    struct timeval currentTime;
+    gettimeofday(&currentTime, NULL);
+    return currentTime.tv_sec * (int)1e6 + currentTime.tv_usec;
+}
+
 Funcionarios inserirFuncionarios()
 {
+    int Valor;
     Funcionarios novo;
-    printf("Informe a matricula: ");
-    setbuf(stdin, NULL);
-    scanf("%[^\n]s", novo.Matricula);
-    printf("Informe o nome: ");
-    setbuf(stdin, NULL);
-    scanf("%[^\n]s", novo.Nome);
-    printf("Informe a funcao: ");
-    setbuf(stdin, NULL);
-    scanf("%[^\n]s", novo.Funcao);
-    printf("Informe o salario: ");
-    scanf("%f", &novo.Salario);
+    Valor = (rand() % 899999) + 100000;
+    sprintf(novo.Matricula, "%d", Valor);
+    strcpy(novo.Nome, "TESTE");
+    strcpy(novo.Funcao, "FUNCAO TESTE");
+    novo.Salario = (rand() % 999999) + 1;
     return novo;
 }
 
@@ -96,15 +102,13 @@ void imprimeFuncionario(Funcionarios *func){
     printf("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n");
 }
 
-int insereHash_comColisao(Hash *Ha, Funcionarios funcio)
+int insereHash_comColisao(Hash *Ha, Funcionarios funcio, int *count)
 {
-    if (Ha == NULL || Ha->qtd == Ha->TamanhoHash)
+    if (Ha == NULL)
     {
-        printf("Tabela lotada!\n");
         return 0;
     }
     if (strlen(funcio.Matricula) == 6){
-
         char chave[10];
         strcpy(chave, funcio.Matricula);
         //Chamando a função para informar a posicao que será guardada a informação na tabela.
@@ -118,22 +122,28 @@ int insereHash_comColisao(Hash *Ha, Funcionarios funcio)
         }
         *novo = funcio;
         //Se nao houver nada na posição informada é so guardar.
-        if (Ha->itens[pos] == NULL){
+        if (Ha->itens[pos] == NULL || Ha->qtd >= Ha->TamanhoHash)
+        {
             Ha->itens[pos] = novo;
             Ha->qtd++;
         }else{
         //Se houver algum dado será procurado uma nova posição, quando achar o loop será interrompido.
+            (*count)++;
             int i, newPos = pos, Key = 1;
-            for (i = 0; i < Ha->TamanhoHash && Key; i++){
+            for (i = 0; i < Ha->qtd && Key && newPos < Ha->TamanhoHash; i++){
                 newPos = funcaoColisao(chave, newPos);
                 if (Ha->itens[newPos] == NULL){
                     Ha->itens[newPos] = novo;
                     Ha->qtd++;
                     Key = 0;
                 }
+                else
+                {
+                    (*count)++;
+                }
             }
             //Se houve o caso de nao encontrar nenhuma posição livre, o dado será guardado na primeira posição que foi encontrado.
-            if (Key == 1){
+            if (Key){
                 Ha->itens[pos] = novo;
             }
         }

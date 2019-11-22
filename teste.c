@@ -2,10 +2,12 @@
 #include <stdlib.h>
 
 int main () {
-   char Aux[10];
-   int valor = 1381;
+   int a = 546546;
+   char buffer[10];
 
-   c
+   sprintf(buffer, "%d", a);
+
+   printf("%s\n", buffer);
 
 
    return(0);
