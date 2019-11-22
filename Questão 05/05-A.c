@@ -56,7 +56,7 @@ int main(void)
             printf("Informe a matricula: ");
             setbuf(stdin, NULL);
             scanf("%[^\n]s", Matricula);
-            n1 = buscaHash(Hs, Matricula))
+            n1 = buscaHash(Hs, Matricula);
             break;
         case 3:
             loopWhile = 0;
