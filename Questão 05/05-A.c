@@ -25,14 +25,14 @@ Funcionarios inserirFuncionarios();
 int insereHash_comColisao(Hash *Ha, Funcionarios funcio);
 int funcaoHash(char *chave, int TamanhoHash);
 int funcaoColisao(char *chave, int pos);
-// int buscaHash(Hash *Ha, char *mat);
+int buscaHash(Hash *Ha, char *mat);
 void imprimeFuncionario(Funcionarios *func);
 
 int main(void)
 {
     Hash *Hs;
     Hs = criaHash(101);
-    int Menu, loopWhile = 1;
+    int Menu, loopWhile = 1, n1;
     char Matricula[15];
     while (loopWhile)
     {
@@ -53,13 +53,10 @@ int main(void)
             }
             break;
         case 2:
-            // printf("Informe a matricula: ");
-            // setbuf(stdin, NULL);
-            // scanf("%[^\n]s", Matricula);
-            // if (buscaHash(Hs, Matricula)){
-            //     printf("PEGOU!!\n");
-            // }
-            printf("NAO PRECISA!!\n");
+            printf("Informe a matricula: ");
+            setbuf(stdin, NULL);
+            scanf("%[^\n]s", Matricula);
+            n1 = buscaHash(Hs, Matricula))
             break;
         case 3:
             loopWhile = 0;
@@ -125,7 +122,6 @@ int insereHash_comColisao(Hash *Ha, Funcionarios funcio)
     }else{
     //Se houver algum dado será procurado uma nova posição, quando achar o loop será interrompido.
         int i, newPos = pos, Key = 1;
-        printf("DEU COLISAO!\n");
         for (i = 0; i < Ha->TamanhoHash && Key; i++){
             newPos = funcaoColisao(chave, newPos);
             if (Ha->itens[newPos] == NULL){
@@ -211,32 +207,49 @@ int funcaoColisao(char *chave, int pos)
     return pos + Aux;
 }
 
-// int buscaHash(Hash *Ha, char *mat)
-// {
-//     if (Ha == NULL)
-//     {
-//         return 0;
-//     }
-//     int pos;
-//     pos = funcaoHash(mat, Ha->TamanhoHash);
-//     if (Ha->itens[pos] == NULL)
-//     {
-//         printf("DEU COLISAO!\n");
-//         int newPos = pos, i, Key = 1;
-//         for (i = 0; i < Ha->TamanhoHash && Key; i++)
-//         {
-//             newPos = funcaoColisao(mat, newPos);
-//             if (Ha->itens[newPos] == NULL)
-//             {
-//                 imprimeFuncionario(Ha->itens[newPos]);
-//                 Key = 0;
-//             }
-//         }
-//         if (Key == 1){
-//             printf("Error: Nao foi possivel achar esse funcionario!\n");
-//         }
-//     }else{
-//         imprimeFuncionario(Ha->itens[pos]);
-//     }
-//     return 1;
-// }
+int buscaHash(Hash *Ha, char *mat)
+{
+    if (Ha == NULL)
+    {
+        return 0;
+    }
+    char Matricula[10];
+    strcpy(Matricula, mat);
+    int pos;
+    pos = funcaoHash(mat, Ha->TamanhoHash);
+    if (Ha->itens[pos] == NULL)
+    {
+    //Se a posição inicial já for NULL então já pode-se afirmar que a matricula não está inserido ainda
+        printf("Error: Nao foi possivel achar esse funcionario!\n");
+        return 0;
+    }else{
+    //Se houver as condições irão procurar o funcionario na tabela.
+        if (strcmp(Ha->itens[pos]->Matricula, Matricula) == 0)
+        {
+            //Se nao tiver ocorrido nenhuma colisão a matricula inicial estara na primeira posição.
+            //Obs. Há uma comparação com a matricula para saber se realmente os dados na posição pertence ao requirido
+            imprimeFuncionario(Ha->itens[pos]);
+        }
+        else
+        {
+            //Se nao for, então ocorreu uma colisão, então havera uma pesquisa para achar onde está o valor original.
+            int newPos = pos, i, Key = 1;
+            for (i = 0; i < Ha->TamanhoHash && Key; i++)
+            {
+                newPos = funcaoColisao(mat, newPos);
+                if (Ha->itens[newPos] != NULL && strcmp(Ha->itens[newPos]->Matricula, Matricula) == 0)
+                {
+                    //Achou o valor da matricula.
+                    imprimeFuncionario(Ha->itens[newPos]);
+                    Key = 0;
+                }
+            }
+            if (Key == 1)
+            {
+                //Caso pecorra todas as possiveis posições e nao encontre o valor requirido.
+                printf("Error: Nao foi possivel achar esse funcionario!\n");
+            }
+        }
+    }
+    return 1;
+}
