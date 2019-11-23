@@ -204,11 +204,6 @@ void liberaHash(Hash *hs)
 
 int funcaoHash(char *chave, int TamanhoHash)
 {
-    //Traduções:
-    //----------
-    //atoi: String para Inteiro.
-    //itoa: Inteiro para String.
-
     int valor1, valor2;
     char Aux1[10], Aux2[10], *ptr;
     //Pegando os valores das posições 0/2/4 da chave e transformando em inteiro.
