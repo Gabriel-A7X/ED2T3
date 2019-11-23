@@ -64,12 +64,12 @@ int main(void)
             break;
         case 3:
             loopWhile = 0;
-            break;    
+            break;
         default:
             printf("Error: Informacao errada!\n");
             break;
         }
-        
+
     }
 
     liberaHash(Hs);
