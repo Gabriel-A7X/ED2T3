@@ -32,7 +32,7 @@ void lerdoArq(char **mats);
 
 int main(void)
 {
-    int TamanhoHash = 150;
+    int TamanhoHash = 101;
     srand(time(NULL));
     Hash *Hs;
     Hs = criaHash(TamanhoHash);
