@@ -79,17 +79,18 @@ int insereHash_comColisao(int *Ha, char *Matricula, int TamanhoHash, int *count,
         (*count)++;
         int i, newPos = pos, Key = 1;
         //Se houver algum dado será procurado uma nova posição, quando achar o loop será interrompido.
-        while(newPos <= TamanhoHash){
+        for (i = 0; i < TamanhoHash; i++){
             newPos = funcaoColisao(Matricula, newPos);
             if (Ha[newPos] == 0){
                 (*QtdInserido)++;
                 return newPos;
-            }else{
+            }
+            else
+            {
                 (*count)++;
             }
         }
     }
-    (*QtdInserido)++;
     return pos;
 }
 

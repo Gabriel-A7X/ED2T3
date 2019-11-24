@@ -27,21 +27,8 @@ Funcionarios inserirFuncionarios(char *mat);
 int insereHash_comColisao(Hash *Ha, Funcionarios funcio, int *count);
 int funcaoHash(char *chave, int TamanhoHash);
 int funcaoColisao(char *chave, int pos);
-int buscaHash(Hash *Ha, char *mat);
-void imprimeFuncionario(Funcionarios *func);
 long getMicrotime();
 void lerdoArq(char **mats);
-
-int encheu(Hash *ha){
-    int ret=1,prossiga=1;
-    for(int i=0;i<ha->TamanhoHash && prossiga;i++){
-        if(ha->itens[i]==NULL){
-            ret=0;
-            prossiga=0;
-        }
-    }
-    return ret;
-}
 
 int main(void)
 {
@@ -50,45 +37,20 @@ int main(void)
     Hash *Hs;
     Hs = criaHash(TamanhoHash);
     int Menu, loopWhile = 1, n1, Tempo1, Tempo2, tempoGeral = 0, count = 0, x, flag = 0;
-    char Matricula[15];
     char **mats;
     mats=(char**)malloc(sizeof(char*)*1000);
     for(int i=0;i<1000;i++){
         mats[i]=(char*)malloc(sizeof(char)*40);
     }
-    while (loopWhile)
-    {
-        printf("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n");
-        printf("1 - Inserir mil funcionarios.\n2 - Buscar Funcionario.\n3 - Sair.\n>>> ");
-        scanf("%d", &Menu);
-        printf("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n");
-        switch (Menu)
-        {
-        case 1:
-            lerdoArq(mats);
-            for (x = 0; x < 1000; x++){
-                Tempo1 = getMicrotime();
-                n1 = insereHash_comColisao(Hs, inserirFuncionarios(mats[x]), &count);
-                Tempo2 = getMicrotime();
-                tempoGeral += Tempo2 - Tempo1;
-            }
-            printf("Tempo de Insercao: %d ms\t\t--\t\tTotal de Colisoes: %d\n", tempoGeral, count);
-            break;
-        case 2:
-            printf("Informe a matricula: ");
-            setbuf(stdin, NULL);
-            scanf("%[^\n]s", Matricula);
-            n1 = buscaHash(Hs, Matricula);
-            break;
-        case 3:
-            loopWhile = 0;
-            break;
-        default:
-            printf("Error: Informacao errada!\n");
-            break;
-        }
 
+    lerdoArq(mats);
+    for (x = 0; x < 1000; x++){
+        Tempo1 = getMicrotime();
+        n1 = insereHash_comColisao(Hs, inserirFuncionarios(mats[x]), &count);
+        Tempo2 = getMicrotime();
+        tempoGeral += Tempo2 - Tempo1;
     }
+    printf("Tempo de Insercao: %d ms\t\t--\t\tTotal de Colisoes: %d\n", tempoGeral, count);
 
     liberaHash(Hs);
     return 0;
@@ -99,6 +61,19 @@ long getMicrotime()
     struct timeval currentTime;
     gettimeofday(&currentTime, NULL);
     return currentTime.tv_sec * (int)1e6 + currentTime.tv_usec;
+}
+
+void lerdoArq(char **mats){
+    FILE *arq = fopen("entradaHASHING.txt", "r");
+	if (arq == NULL){
+    	printf("ERRO! O arquivo não foi aberto (FUNÇÃO setEntrada)!\n");
+	}else{
+		int i=0;
+		while( (fscanf(arq, "%s", mats[i])) != EOF){
+			//printf("%ld = [%s]\n",strlen(func[i].matricula), func[i].matricula );
+			i++;
+		}
+	}
 }
 
 Funcionarios inserirFuncionarios(char *mat)
@@ -112,21 +87,6 @@ Funcionarios inserirFuncionarios(char *mat)
     novo.Salario = (rand() % 999999) + 1;
     return novo;
 }
-
-void lerdoArq(char **mats){
-    FILE *arq = fopen("entradaHASHING-05.txt", "r");
-	if (arq == NULL){
-    	printf("ERRO! O arquivo não foi aberto (FUNÇÃO setEntrada)!\n");
-	}else{
-		int i=0;
-		while( (fscanf(arq, "%s", mats[i])) != EOF){
-			//printf("%ld = [%s]\n",strlen(func[i].matricula), func[i].matricula );
-			i++;
-		}
-	}
-}
-
-
 
 void imprimeFuncionario(Funcionarios *func){
     printf("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n");
@@ -148,39 +108,39 @@ int insereHash_comColisao(Hash *Ha, Funcionarios funcio, int *count)
         int pos = funcaoHash(chave, Ha->TamanhoHash);
         Funcionarios *novo;
         novo = (Funcionarios *)malloc(sizeof(Funcionarios));
-        if (novo == NULL)
-        {
+        if (novo == NULL){
             printf("Erro na criacao da estrutura 'Funcionario'\n");
             return 0;
         }
         *novo = funcio;
         //Se nao houver nada na posição informada é so guardar.
-        if (Ha->itens[pos] == NULL ) //|| Ha->qtd >= Ha->TamanhoHash
-        {
+        if (Ha->itens[pos] == NULL){
             Ha->itens[pos] = novo;
             Ha->qtd++;
+        }else if (Ha->qtd >= Ha->TamanhoHash){
+            Ha->itens[pos] = novo;
+            (*count)++;     //Conta a colisão pois já ira conter algum valor nessa posição.
         }else{
-        
-            int Key = 1;
-            if(!encheu(Ha)){
-                (*count)++;
-                int i, newPos = pos;
-                //Se houver algum dado será procurado uma nova posição, quando achar o loop será interrompido.
-                for (i = 0; i < Ha->qtd && Key && newPos < Ha->TamanhoHash; i++){
-                    newPos = funcaoColisao(chave, newPos);
-                    if (Ha->itens[newPos] == NULL){
-                        Ha->itens[newPos] = novo;
-                        Ha->qtd++;
-                        Key = 0;
-                    }
-                    else
-                    {
-                        (*count)++;
-                    }
+        //Se houver algum dado será procurado uma nova posição, quando achar o loop será interrompido.
+            (*count)++;
+            int i, newPos = pos, Key = 1;
+            strcpy(chave, funcio.Matricula);
+            for (i = 0; i < Ha->TamanhoHash && Key; i++){
+                newPos = funcaoColisao(chave, newPos);
+                //Se o valor da colisao passar do tamanho do vetor, então não tem logica continuar o loop.
+                if (newPos > Ha->TamanhoHash){
+                    i = newPos;
+                }else if (Ha->itens[newPos] == NULL){
+                    Ha->itens[newPos] = novo;
+                    Ha->qtd++;
+                    Key = 0;
+                }else{
+                    (*count)++;
                 }
             }
             //Se houve o caso de nao encontrar nenhuma posição livre, o dado será guardado na primeira posição que foi encontrado.
             if (Key){
+                Ha->qtd++;
                 Ha->itens[pos] = novo;
             }
         }
@@ -243,21 +203,14 @@ int funcaoHash(char *chave, int TamanhoHash)
     Aux[5] = chave[3];
     Aux[6] = '\0';
     strcpy(chave, Aux);
-    
-    // printf("%s\n",Aux);
     //Pegando os valores das posições 2/4/6 da nova chave.
-    Aux[0] = Aux[1];
-    Aux[1] = Aux[3];
-    Aux[2] = Aux[5];
+    Aux[0] = chave[1];
+    Aux[1] = chave[3];
+    Aux[2] = chave[5];
     Aux[3] = '\0';
     //Transformando em inteiro e dividindo pelo tamanho da tabela e retornando o resto.
-    // printf("%s\n",Aux);
     valor = atoi(Aux);
     return ((int) valor % TamanhoHash);
-    // return(	((chave[5]-48)*100) +
-	// 					((chave[1]-48)*10) + 
-	// 					((chave[3]-48)*1) 
-	// 				)%TamanhoHash;
 }
 
 int funcaoColisao(char *chave, int pos)
@@ -265,51 +218,4 @@ int funcaoColisao(char *chave, int pos)
     //Quando der colisão essa função irá somar o resto da divisão com o primeiro dígito da matrícula.
     int Aux = (int)chave[0] - 48;
     return pos + Aux;
-}
-
-int buscaHash(Hash *Ha, char *mat)
-{
-    if (Ha == NULL)
-    {
-        return 0;
-    }
-    char Matricula[10];
-    strcpy(Matricula, mat);
-    int pos;
-    pos = funcaoHash(mat, Ha->TamanhoHash);
-    if (Ha->itens[pos] == NULL)
-    {
-    //Se a posição inicial já for NULL então já pode-se afirmar que a matricula não está inserido ainda
-        printf("Error: Nao foi possivel achar esse funcionario!\n");
-        return 0;
-    }else{
-    //Se houver as condições irão procurar o funcionario na tabela.
-        if (strcmp(Ha->itens[pos]->Matricula, Matricula) == 0)
-        {
-            //Se nao tiver ocorrido nenhuma colisão a matricula inicial estara na primeira posição.
-            //Obs. Há uma comparação com a matricula para saber se realmente os dados na posição pertence ao requirido
-            imprimeFuncionario(Ha->itens[pos]);
-        }
-        else
-        {
-            //Se nao for, então ocorreu uma colisão, então havera uma pesquisa para achar onde está o valor original.
-            int newPos = pos, i, Key = 1;
-            for (i = 0; i < Ha->TamanhoHash && Key; i++)
-            {
-                newPos = funcaoColisao(mat, newPos);
-                if (Ha->itens[newPos] != NULL && strcmp(Ha->itens[newPos]->Matricula, Matricula) == 0)
-                {
-                    //Achou o valor da matricula.
-                    imprimeFuncionario(Ha->itens[newPos]);
-                    Key = 0;
-                }
-            }
-            if (Key == 1)
-            {
-                //Caso pecorra todas as possiveis posições e nao encontre o valor requirido.
-                printf("Error: Nao foi possivel achar esse funcionario!\n");
-            }
-        }
-    }
-    return 1;
 }
